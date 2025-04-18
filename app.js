@@ -1,7 +1,11 @@
 //jshint esversion:6
+import dotenv from "dotenv"
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
+
+dotenv.config()
+
 
 const db = new pg.Client({
 	user: "postgres",
@@ -32,9 +36,10 @@ app.post("/register", async (req, res) => {
 	const password = req.body.password;
 	console.log(username);
 	try {
-		await db.query("INSERT INTO users(email,password) VALUES($1, pgp_sym_encrypt($2, 'Am74108520$'))", [
+		await db.query("INSERT INTO users(email,password) VALUES($1, pgp_sym_encrypt($2, $3))", [
 			username,
 			password,
+            process.env.SECRET
 		]);
 	} catch (err) {
 		if (err.code == 23505) {
@@ -46,7 +51,7 @@ app.post("/register", async (req, res) => {
 app.post("/login", async(req, res) =>{
     const username = req.body.username;
 	const password = req.body.password;
-   const result =  await db.query("SELECT 1 FROM users WHERE email=$1 AND  pgp_sym_decrypt(email::bytea, 'Am74108520$')=$2",[username, password])
+   const result =  await db.query("SELECT 1 FROM users WHERE email=$1 AND  pgp_sym_decrypt(email::bytea, $2)=$3",[username,process.env.SECRET, password])
    if (result.rows == []) {
     console.log("username not found")
    }else {

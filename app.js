@@ -131,9 +131,13 @@ app.post("/register", async (req, res) => {
 	res.render("secrets.ejs");
 });
 
-app.get("/secrets", (req, res) => {
-	
-	res.render("secrets.ejs");
+app.get("/secrets", async(req, res) => {
+ 	const id = req.user.google_id
+
+
+	const users =await  db.query("SELECT secret FROM secrets WHERE google_user_id=$1", [id])
+	console.log(users.rows)
+	res.render("secrets.ejs", {secrets: users.rows});
 });
 app.post("/login", async (req, res) => {
 	const username = req.body.username;
@@ -158,8 +162,8 @@ app.post("/submit", async(req, res)=> {
 	const mess = req.body.secret
 	const id = req.user.google_id
 
-	const data =  await db.query("INSERT INTO secrets (google_user_id, secret) VALUES($1, $2) RETURNING *",[id, mess])
-	res.redirect("/submit")
+	 await db.query("INSERT INTO secrets (google_user_id, secret) VALUES($1, $2) RETURNING *",[id, mess])
+	res.redirect("/secrets")
 })
 app.listen(3000, () => {
 	console.log("OOOOH Yeah");

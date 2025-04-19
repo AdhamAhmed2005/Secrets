@@ -71,8 +71,7 @@ passport.serializeUser((user, done) => {
 
 // Deserialize user from the session
 passport.deserializeUser(async (id, done) => {
-	console.log("decer");
-	console.log(id);
+
 	try {
 		const result = await db.query("SELECT * FROM users WHERE google_id = $1", [
 			id,
@@ -92,7 +91,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
 	if (req.isAuthenticated()) {
-		console.log("kmdomdfkmdof");
 		res.render("secrets.ejs"); // Proceed to the next middleware or route handler
 	} else res.render("home.ejs");
 });
@@ -120,7 +118,6 @@ app.get(
 app.post("/register", async (req, res) => {
 	const username = req.body.username;
 	const password = req.body.password;
-	console.log(username);
 	try {
 		await db.query(
 			"INSERT INTO users(email,password) VALUES($1, pgp_sym_encrypt($2, $3))",
@@ -135,8 +132,7 @@ app.post("/register", async (req, res) => {
 });
 
 app.get("/secrets", (req, res) => {
-	console.log("sec");
-	console.log(req.user);
+	
 	res.render("secrets.ejs");
 });
 app.post("/login", async (req, res) => {
@@ -152,6 +148,19 @@ app.post("/login", async (req, res) => {
 		res.render("secrets.ejs");
 	}
 });
+
+app.get("/submit", (req, res)=> {
+
+	res.render("submit.ejs")
+})
+
+app.post("/submit", async(req, res)=> {
+	const mess = req.body.secret
+	const id = req.user.google_id
+
+	const data =  await db.query("INSERT INTO secrets (google_user_id, secret) VALUES($1, $2) RETURNING *",[id, mess])
+	res.redirect("/submit")
+})
 app.listen(3000, () => {
 	console.log("OOOOH Yeah");
 });
